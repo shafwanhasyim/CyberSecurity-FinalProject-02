@@ -1,0 +1,7 @@
+/* src/index.css */
+@import "tailwindcss";
+
+/* Dark mode for body */
+body {
+  @apply bg-gray-900 text-white;
+}

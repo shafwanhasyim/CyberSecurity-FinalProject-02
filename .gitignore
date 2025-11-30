@@ -1,37 +1,88 @@
 # Dependencies
 node_modules/
 npm-debug.log*
+npm-debug.log*.gz
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # Environment variables
 .env
 .env.local
 .env.*.local
+.env.production.local
+.env.development.local
+.env.test.local
 
-# IDE
+# IDE & Editor
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
 .DS_Store
+.AppleDouble
+.LSOverride
+*.code-workspace
 
-# Build output
+# Build output & dist
 dist/
 build/
 out/
+.next/
+.turbo/
 
-# OS
+# Development
+.cache/
+.parcel-cache
+.eslintcache
+
+# OS files
 Thumbs.db
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 
 # Logs
 logs/
 *.log
+lerna-debug.log*
 
-# Lock files (optional, uncomment if you want to commit them)
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Misc
+.eslintignore
+.prettierignore
+*.tsbuildinfo
+
+# Backend specific
+backend/.env
+backend/node_modules/
+backend/dist/
+
+# Frontend specific
+frontend/.env
+frontend/node_modules/
+frontend/dist/
+frontend/.turbo/
+
+# Database
+*.sqlite
+*.sqlite3
+db.json
