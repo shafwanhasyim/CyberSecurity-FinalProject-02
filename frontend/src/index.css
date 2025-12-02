@@ -1,7 +1,8 @@
-/* src/index.css */
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Dark mode for body */
 body {
-  @apply bg-gray-900 text-white;
+  background-color: rgb(3, 7, 18);
+  color: white;
 }

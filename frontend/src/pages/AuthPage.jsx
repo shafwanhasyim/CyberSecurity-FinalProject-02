@@ -20,11 +20,10 @@ const AuthPage = () => {
       
       if (isLogin) {
         localStorage.setItem('vulnerableToken', response.data.token);
-        // Simpan ID untuk Profil Page, karena backend mengembalikan ID saat login
         localStorage.setItem('userId', response.data.id); 
-        setMessage(`Login Success! Token saved.`);
+        setMessage(`Success: Logged in.`);
       } else {
-        setMessage('Registration Success. Please login now.');
+        setMessage('Success: Registration complete. Please login.');
       }
       
     } catch (error) {
@@ -88,7 +87,7 @@ const AuthPage = () => {
         onClick={() => localStorage.clear()}
         className="mt-4 text-xs text-gray-400 hover:text-red-500"
       >
-        Clear Local Storage (Logout)
+        Clear Session (Logout)
       </button>
     </div>
   );

@@ -5,7 +5,6 @@ import UserListPage from './pages/UserListPage';
 import ProfilePage from './pages/ProfilePage';
 import AccountSettingsPage from './pages/AccountSettingsPage';
 
-// Component NavLink Minimalis
 const NavLink = ({ to, children }) => (
   <Link 
     to={to} 
@@ -18,13 +17,14 @@ const NavLink = ({ to, children }) => (
 function App() {
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* Navbar Hitam & Minimalis */}
       <nav className="bg-gray-800 shadow-md">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
+            <Link to="/" className="text-xl font-bold text-cyan-400">
+              MinimalApp
+            </Link>
             <div className="flex space-x-2">
               <NavLink to="/">Auth</NavLink>
-              <NavLink to="/users">Data</NavLink>
               <NavLink to="/profile">Profile</NavLink>
               <NavLink to="/settings">Settings</NavLink>
             </div>
@@ -35,8 +35,8 @@ function App() {
       <main className="container mx-auto p-8">
         <Routes>
           <Route path="/" element={<AuthPage />} />
-          <Route path="/users" element={<UserListPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/users" element={<UserListPage />} /> 
+          <Route path="/profile/:id?" element={<ProfilePage />} />
           <Route path="/settings" element={<AccountSettingsPage />} />
         </Routes>
       </main>
