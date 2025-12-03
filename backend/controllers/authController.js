@@ -63,7 +63,7 @@ const login = async (req, res) => {
             JWT_SECRET
         );
 
-        res.json({ token, id: user.id });
+        res.json({ token, id: user.id, is_admin: user.is_admin });
 
     } catch (err) {
         console.error('Login error:', err);

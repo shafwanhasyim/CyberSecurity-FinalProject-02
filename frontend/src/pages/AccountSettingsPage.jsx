@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 const AccountSettingsPage = () => {
   const navigate = useNavigate();
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [message, setMessage] = useState('');
 
@@ -21,20 +22,22 @@ const AccountSettingsPage = () => {
     e.preventDefault();
     setMessage('');
 
-    if (!newPassword) {
-      return setMessage('Error: New password is required.');
+    if (!currentPassword || !newPassword) {
+      return setMessage('Error: Current and new password are required.');
     }
 
     try {
-      // ⚠️ VULNERABILITY 2: Endpoint ini secara eksplisit menggunakan ID DIRI SENDIRI.
-      // EKSPLOITASI dilakukan dengan MENCEGAT permintaan ini dan MENGGANTI ID di URL.
-      const url = `http://localhost:3001/api/users/${userId}/reset_password`;
-      
-      await axios.post(url, { new_password: newPassword }, {
+      const url = `http://localhost:3001/api/users/reset_password`;
+
+      await axios.post(url, {
+        current_password: currentPassword,
+        new_password: newPassword
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       setMessage(`✅ Success: Your password has been successfully changed.`);
+      setCurrentPassword('');
       setNewPassword('');
       
     } catch (error) {
@@ -48,6 +51,13 @@ const AccountSettingsPage = () => {
       <div className="bg-gray-800 p-6 rounded-lg shadow-xl">
         <h3 className="text-xl font-bold mb-4 text-cyan-400">Change Account Password</h3>
         <form onSubmit={handlePasswordChange} className="space-y-4">
+          <input
+            type="password"
+            placeholder="Current Password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            className="w-full p-2 bg-gray-700 border border-gray-600 rounded"
+          />
           <input 
             type="password" 
             placeholder="New Password" 

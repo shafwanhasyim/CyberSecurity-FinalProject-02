@@ -1,4 +1,5 @@
 // src/App.jsx
+import { useEffect, useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import AuthPage from './pages/AuthPage';
 import UserListPage from './pages/UserListPage';
@@ -15,6 +16,27 @@ const NavLink = ({ to, children }) => (
 );
 
 function App() {
+  const [session, setSession] = useState(() => ({
+    token: localStorage.getItem('vulnerableToken'),
+    isAdmin: localStorage.getItem('isAdmin') === 'true'
+  }));
+
+  useEffect(() => {
+    const updateSession = () => {
+      setSession({
+        token: localStorage.getItem('vulnerableToken'),
+        isAdmin: localStorage.getItem('isAdmin') === 'true'
+      });
+    };
+
+    window.addEventListener('session-update', updateSession);
+    window.addEventListener('storage', updateSession);
+    return () => {
+      window.removeEventListener('session-update', updateSession);
+      window.removeEventListener('storage', updateSession);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-900">
       <nav className="bg-gray-800 shadow-md">
@@ -27,6 +49,7 @@ function App() {
               <NavLink to="/">Auth</NavLink>
               <NavLink to="/profile">Profile</NavLink>
               <NavLink to="/settings">Settings</NavLink>
+              {session.token && session.isAdmin && <NavLink to="/users">Users</NavLink>}
             </div>
           </div>
         </div>
@@ -35,7 +58,10 @@ function App() {
       <main className="container mx-auto p-8">
         <Routes>
           <Route path="/" element={<AuthPage />} />
-          <Route path="/users" element={<UserListPage />} /> 
+          <Route
+            path="/users"
+            element={session.token && session.isAdmin ? <UserListPage /> : <AuthPage />}
+          /> 
           <Route path="/profile/:id?" element={<ProfilePage />} />
           <Route path="/settings" element={<AccountSettingsPage />} />
         </Routes>

@@ -1,5 +1,6 @@
 // middleware/auth.js
 const jwt = require('jsonwebtoken');
+const pool = require('../config/db');
 require('dotenv').config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -21,6 +22,28 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+const requireAdmin = async (req, res, next) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            return res.status(403).json({ error: 'Administrator privileges required' });
+        }
+
+        const result = await pool.query('SELECT is_admin FROM users WHERE id = $1', [userId]);
+        const isAdmin = result.rows[0]?.is_admin;
+
+        if (!isAdmin) {
+            return res.status(403).json({ error: 'Administrator privileges required' });
+        }
+
+        next();
+    } catch (err) {
+        console.error('Admin check failed:', err);
+        res.status(500).json({ error: 'Failed to verify administrator access' });
+    }
+};
+
 module.exports = {
-    authenticateToken
+    authenticateToken,
+    requireAdmin
 };

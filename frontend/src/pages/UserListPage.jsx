@@ -5,13 +5,28 @@ import axios from 'axios';
 const UserListPage = () => {
   const [users, setUsers] = useState(null);
   const [loading, setLoading] = useState(false);
+  const token = localStorage.getItem('vulnerableToken');
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
   const fetchUsers = async () => {
+    if (!token) {
+      setUsers({ error: 'You must login before requesting this report.' });
+      return;
+    }
+
+    if (!isAdmin) {
+      setUsers({ error: 'Administrator privileges required.' });
+      return;
+    }
+
     setLoading(true);
     setUsers(null);
     try {
-      // ⚠️ VULNERABILITY 1: Akses endpoint sensitif tanpa token
-      const response = await axios.get('http://localhost:3001/api/users/all'); 
+      const response = await axios.get('http://localhost:3001/api/users/all', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }); 
       setUsers(response.data);
       
     } catch (error) {

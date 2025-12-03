@@ -1,8 +1,10 @@
 // src/pages/AuthPage.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const AuthPage = () => {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -21,7 +23,10 @@ const AuthPage = () => {
       if (isLogin) {
         localStorage.setItem('vulnerableToken', response.data.token);
         localStorage.setItem('userId', response.data.id); 
+        localStorage.setItem('isAdmin', response.data.is_admin ? 'true' : 'false');
+        window.dispatchEvent(new Event('session-update'));
         setMessage(`Success: Logged in.`);
+        navigate('/profile');
       } else {
         setMessage('Success: Registration complete. Please login.');
       }
@@ -84,10 +89,14 @@ const AuthPage = () => {
       {Form}
       {message && <p className={`mt-4 p-3 rounded text-sm ${message.includes('Success') ? 'bg-green-700 text-green-100' : 'bg-red-700 text-red-100'}`}>{message}</p>}
       <button 
-        onClick={() => localStorage.clear()}
         className="mt-4 text-xs text-gray-400 hover:text-red-500"
+        onClick={() => {
+          localStorage.clear();
+          window.dispatchEvent(new Event('session-update'));
+          setMessage('Session cleared.');
+        }}
       >
-        Clear Session (Logout)
+          Clear Session (Logout)
       </button>
     </div>
   );
